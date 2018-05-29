@@ -1,0 +1,46 @@
+{
+  "name": "spotify-battle",
+  "version": "1.0.0",
+  "description": "A web app where you guess which global top 50 track is higher in the charts - made with React.",
+  "main": "index.js",
+  "scripts": {
+    "start": "webpack-dev-server --open",
+    "build": "NODE_ENV='production' webpack -p"
+  },
+  "babel": {
+    "presets": [
+      "env",
+      "react"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adamjoyce/spotify-battle.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/adamjoyce/spotify-battle/issues"
+  },
+  "homepage": "https://github.com/adamjoyce/spotify-battle#readme",
+  "dependencies": {
+    "css-loader": "^0.28.11",
+    "prop-types": "^15.6.1",
+    "react": "^16.4.0",
+    "react-dom": "^16.4.0",
+    "react-router-dom": "^4.2.2",
+    "react-transition-group": "^2.3.1",
+    "style-loader": "^0.21.0",
+    "styled-components": "^3.3.0"
+  },
+  "devDependencies": {
+    "babel-core": "^6.26.3",
+    "babel-loader": "^7.1.4",
+    "babel-preset-env": "^1.7.0",
+    "babel-preset-react": "^6.24.1",
+    "html-webpack-plugin": "^3.2.0",
+    "webpack": "^4.10.0",
+    "webpack-cli": "^2.1.4",
+    "webpack-dev-server": "^3.1.4"
+  }
+}
