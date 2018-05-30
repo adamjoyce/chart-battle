@@ -1,10 +1,16 @@
 import React from 'react';
-import {BrowserRouter as Router, Route, Switch, Link} from 'react-router-dom';
+import {BrowserRouter as Router,
+        Route,
+        Switch,
+        Link,
+        Redirect} from 'react-router-dom';
 import styled, {injectGlobal, ThemeProvider} from 'styled-components';
 import {TransitionGroup, CSSTransition} from 'react-transition-group';
+import queryString from 'query-string';
 
 import baseStyles from '../baseStyles';
 import {theme} from '../themes';
+import {getAccessToken} from '../utils/api';
 import Battle from './Battle';
 import Chart from './Chart';
 import NoMatch from './NoMatch';
@@ -16,9 +22,8 @@ const PageWrapper = styled.div`
 `;
 
 const ContentWrapper = styled.div`
-  margin: 2rem 0;
+  padding: 1rem 0;
   position: relative;
-  min-height: 2rem;
 `;
 
 const Title = styled.h1`
@@ -27,38 +32,55 @@ const Title = styled.h1`
 `;
 
 class App extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      accessToken: null
+    }
+
+    // Set the access token state if present.
+    const hash = window.location.hash;
+    if (hash !== '') {
+      const parsedHash = queryString.parse(hash);
+      this.state.accessToken = parsedHash;
+    }
+  }
+
   componentDidMount() {
     baseStyles();
+    // Get the user to authenticate for an access token.
+    if (this.state.accessToken === null) {
+      getAccessToken();
+    }
   }
 
   render() {
+    const {accessToken} = this.state;
+    console.log(accessToken);
     return (
-      <Router>
-        <Route render={({location}) => (
-          <ThemeProvider theme={theme}>
-            <PageWrapper>
-              <Title>Spotify Battle</Title>
-              <ContentWrapper>
-              <TransitionGroup>
-                <CSSTransition
-                  key={location.key}
-                  timeout={500}
-                  classNames="fade">
-                    <Switch location={location}>
-                      <Route exact path='/' />
-                      <Route exact path='/battle' component={Battle} />
-                      <Route exact path='/top50' component={Chart} />
-                      <Route component={NoMatch} />
-                    </Switch>
-                </CSSTransition>
-              </TransitionGroup>
-              </ContentWrapper>
-              <Link to='/battle'><Button>Battle</Button></Link>
-              <Link to='/top50'><Button>Top 50</Button></Link>
-            </PageWrapper>
-          </ThemeProvider>
-        )} />
-      </Router>
+      accessToken !== null
+      ? <Router>
+          <Route render={({location}) => (
+            <ThemeProvider theme={theme}>
+              <PageWrapper>
+                <Title>Chart Battle</Title>
+                <ContentWrapper>
+                  <Switch location={location}>
+                    <Route exact path='/' />
+                    <Route exact path='/battle' component={Battle} />
+                    <Route exact path='/top50' render={() =>
+                      <Chart token={accessToken} />}
+                    />
+                    <Route component={NoMatch} />
+                  </Switch>
+                </ContentWrapper>
+                <Link to='/battle'><Button>Battle</Button></Link>
+                <Link to='/top50'><Button>Top50</Button></Link>
+              </PageWrapper>
+            </ThemeProvider>
+          )} />
+        </Router>
+      : null
     );
   }
 }
