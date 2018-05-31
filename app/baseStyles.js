@@ -17,6 +17,7 @@ const baseStyles = () => injectGlobal`
     flex-direction: column;
     height: 100%;
     justify-content: center;
+    overflow: auto;
   }
   .fade-enter {
     opacity: 0.01;

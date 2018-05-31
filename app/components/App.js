@@ -10,7 +10,7 @@ import queryString from 'query-string';
 
 import baseStyles from '../baseStyles';
 import {theme} from '../themes';
-import {authenticateForToken} from '../utils/api';
+import {authenticateForToken, getPlaylist} from '../utils/api';
 import {randomString} from '../utils/helpers';
 import Battle from './Battle';
 import Chart from './Chart';
@@ -42,7 +42,10 @@ class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      accessToken: null
+      accessToken: null,
+      chartTracks: null,
+      chartUserId: 'spotifycharts',
+      chartPlaylistId: '37i9dQZEVXbMDoHDwVN2tF'
     }
 
     const hash = window.location.hash;
@@ -54,17 +57,31 @@ class App extends React.Component {
     }
   }
 
-  componentDidMount() {
+  async componentDidMount() {
+    const {accessToken,
+           chartTracks,
+           chartUserId,
+           chartPlaylistId} = this.state;
+
     baseStyles();
+
     // Get the user to authenticate for an access token.
-    if (this.state.accessToken === null) {
+    if (accessToken === null) {
       authenticateForToken();
+    }
+    else if (chartTracks === null) {
+      // Grab the top 50 from the Spotify API to pass to sub componenets.
+      const chartTracks = await getPlaylist(
+        chartUserId, chartPlaylistId, accessToken);
+
+      this.setState(() => ({chartTracks}));
     }
   }
 
   render() {
-    const {accessToken} = this.state;
+    const {accessToken, chartTracks} = this.state;
     console.log(accessToken);
+    console.log(chartTracks);
     return (
       <Router>
         <Route render={({location}) => (
@@ -80,21 +97,29 @@ class App extends React.Component {
                       fontSize={theme.h2.size}
                     />
                   </ContentWrapper>
-                : // User already has an access token.
-                  <React.Fragment>
-                    <ContentWrapper>
-                      <Switch>
-                        <Route exact path='/' />
-                        <Route exact path='/battle' component={Battle} />
-                        <Route exact path='/top50' render={() =>
-                          <Chart token={accessToken} />}
+                : chartTracks === null
+                    ? // Wait to grab the chart tracks from the api.
+                      <ContentWrapper>
+                        <Loading
+                          color={theme.colors.primary}
+                          fontSize={theme.h2.size}
                         />
-                        <Route component={NoMatch} />
-                      </Switch>
-                    </ContentWrapper>
-                    <Link to='/battle'><Button>Battle</Button></Link>
-                    <Link to='/top50'><Button>Top50</Button></Link>
-                  </React.Fragment>}
+                      </ContentWrapper>
+                    : // User has access token and tracks from api.
+                      <React.Fragment>
+                        <ContentWrapper>
+                          <Switch>
+                            <Route exact path='/' />
+                            <Route exact path='/battle' component={Battle} />
+                            <Route exact path='/top50' render={() =>
+                              <Chart token={accessToken} />}
+                            />
+                            <Route component={NoMatch} />
+                          </Switch>
+                        </ContentWrapper>
+                        <Link to='/battle'><Button>Battle</Button></Link>
+                        <Link to='/top50'><Button>Top50</Button></Link>
+                      </React.Fragment>}
             </PageWrapper>
           </ThemeProvider>
         )} />

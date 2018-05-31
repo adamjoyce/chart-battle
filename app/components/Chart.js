@@ -13,7 +13,7 @@ class Chart extends React.Component {
     return (
       <React.Fragment>
         <Text>Top50</Text>
-        <Text>Your Access Token: {token.access_token}</Text>
+        <Text>Your Access Token {token.access_token}</Text>
       </React.Fragment>
     );
   }
