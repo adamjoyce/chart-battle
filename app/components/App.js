@@ -5,16 +5,18 @@ import {BrowserRouter as Router,
         Link,
         Redirect} from 'react-router-dom';
 import styled, {injectGlobal, ThemeProvider} from 'styled-components';
-import {TransitionGroup, CSSTransition} from 'react-transition-group';
+// import {TransitionGroup, CSSTransition} from 'react-transition-group';
 import queryString from 'query-string';
 
 import baseStyles from '../baseStyles';
 import {theme} from '../themes';
-import {getAccessToken} from '../utils/api';
+import {authenticateForToken} from '../utils/api';
+import {randomString} from '../utils/helpers';
 import Battle from './Battle';
 import Chart from './Chart';
 import NoMatch from './NoMatch';
 import Button from './Button';
+import Loading from './Loading';
 
 const PageWrapper = styled.div`
   margin: 0 1rem;
@@ -31,6 +33,11 @@ const Title = styled.h1`
   font-size: 4rem;
 `;
 
+const Warning = styled.h2`
+  color: ${(props) => props.theme.colors.primary};
+  font-size: ${(props => props.theme.h2.size)};
+`;
+
 class App extends React.Component {
   constructor(props) {
     super(props);
@@ -38,10 +45,11 @@ class App extends React.Component {
       accessToken: null
     }
 
-    // Set the access token state if present.
     const hash = window.location.hash;
     if (hash !== '') {
       const parsedHash = queryString.parse(hash);
+
+      // Sets the accessToken if one is present.
       this.state.accessToken = parsedHash;
     }
   }
@@ -50,7 +58,7 @@ class App extends React.Component {
     baseStyles();
     // Get the user to authenticate for an access token.
     if (this.state.accessToken === null) {
-      getAccessToken();
+      authenticateForToken();
     }
   }
 
@@ -58,29 +66,39 @@ class App extends React.Component {
     const {accessToken} = this.state;
     console.log(accessToken);
     return (
-      accessToken !== null
-      ? <Router>
-          <Route render={({location}) => (
-            <ThemeProvider theme={theme}>
-              <PageWrapper>
-                <Title>Chart Battle</Title>
-                <ContentWrapper>
-                  <Switch location={location}>
-                    <Route exact path='/' />
-                    <Route exact path='/battle' component={Battle} />
-                    <Route exact path='/top50' render={() =>
-                      <Chart token={accessToken} />}
+      <Router>
+        <Route render={({location}) => (
+          <ThemeProvider theme={theme}>
+            <PageWrapper>
+              <Title>Chart Battle</Title>
+              {accessToken === null
+                ? // Spotify authentication required.
+                  <ContentWrapper>
+                    <Loading
+                      text='Redirecting to Spotify'
+                      color={theme.colors.primary}
+                      fontSize={theme.h2.size}
                     />
-                    <Route component={NoMatch} />
-                  </Switch>
-                </ContentWrapper>
-                <Link to='/battle'><Button>Battle</Button></Link>
-                <Link to='/top50'><Button>Top50</Button></Link>
-              </PageWrapper>
-            </ThemeProvider>
-          )} />
-        </Router>
-      : null
+                  </ContentWrapper>
+                : // User already has an access token.
+                  <React.Fragment>
+                    <ContentWrapper>
+                      <Switch>
+                        <Route exact path='/' />
+                        <Route exact path='/battle' component={Battle} />
+                        <Route exact path='/top50' render={() =>
+                          <Chart token={accessToken} />}
+                        />
+                        <Route component={NoMatch} />
+                      </Switch>
+                    </ContentWrapper>
+                    <Link to='/battle'><Button>Battle</Button></Link>
+                    <Link to='/top50'><Button>Top50</Button></Link>
+                  </React.Fragment>}
+            </PageWrapper>
+          </ThemeProvider>
+        )} />
+      </Router>
     );
   }
 }
