@@ -13,10 +13,7 @@ const baseStyles = () => injectGlobal`
   }
   #app {
     background-color: ${theme.colors.background};
-    display: flex;
-    flex-direction: column;
     height: 100%;
-    justify-content: center;
     overflow: auto;
   }
   .fade-enter {
